@@ -1,61 +1,51 @@
-import { View } from 'react-native';
-import { IExpense, Period } from '../../types';
+import { useContext } from 'react';
+import { StyleSheet, View, Text } from 'react-native';
+import { GlobalStyles } from '../../constants/styles';
+import { ExpensesContext } from '../../store/ExpensesContext';
+import { Period } from '../../types';
 import ExpensesList from './ExpensesList';
 import ExpensesSummary from './ExpensesSummary';
 
-const DUMMY_EXPENSES: IExpense[] = [
-  {
-    id: 'e1',
-    title: 'A pair of shoes',
-    amount: 59.99,
-    date: new Date('2023-03-03'),
-  },
-  {
-    id: 'e2',
-    title: 'A book',
-    amount: 19.99,
-    date: new Date('2023-03-01'),
-  },
-  {
-    id: 'e3',
-    title: 'The magazine',
-    amount: 9.99,
-    date: new Date('2023-02-2'),
-  },
-  {
-    id: 'e4',
-    title: 'Theater tickets',
-    amount: 19.39,
-    date: new Date('2023-01-29'),
-  },
-  {
-    id: 'e5',
-    title: 'Shampoo',
-    amount: 14.79,
-    date: new Date('2023-01-20'),
-  },
-];
-
 interface Props {
-  expenses: IExpense[];
   period: Period;
 }
 
-const ExpensesOutput = ({ expenses, period }: Props) => {
+const ExpensesOutput = ({ period }: Props) => {
+  const { expenses } = useContext(ExpensesContext);
+
   const today = new Date();
-  const periodStart = new Date(today.setDate(today.getDate() - 7));
+  const recentPeriodStart = new Date(today.setDate(today.getDate() - 7));
 
   const filteredExpenses =
     period === Period.WEEK
-      ? DUMMY_EXPENSES.filter((exp) => exp.date > periodStart)
-      : DUMMY_EXPENSES;
+      ? expenses.filter((exp) => exp.date > recentPeriodStart)
+      : expenses;
 
   return (
-    <View>
+    <View style={styles.container}>
       <ExpensesSummary period={period} expenses={filteredExpenses} />
-      <ExpensesList items={filteredExpenses} />
+      {filteredExpenses.length ? (
+        <ExpensesList items={filteredExpenses} />
+      ) : (
+        <Text style={styles.infoText}>Nothing here yet</Text>
+      )}
     </View>
   );
 };
+
+const styles = StyleSheet.create({
+  container: {
+    paddingHorizontal: 24,
+    paddingTop: 24,
+    backgroundColor: GlobalStyles.colors.primary700,
+    flex: 1,
+  },
+  infoText: {
+    color: 'white',
+    fontSize: 16,
+    textAlign: 'center',
+    marginTop: 42,
+  },
+});
 
 export default ExpensesOutput;

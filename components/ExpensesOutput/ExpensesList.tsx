@@ -1,13 +1,14 @@
 import { FlatList, ListRenderItemInfo, Text } from 'react-native';
 import { IExpense } from '../../types';
 import ExpensesSummary from './ExpensesSummary';
+import ExpenseItem from './ExpenseItem';
 
 interface Props {
   items: IExpense[];
 }
 
 const renderExpenseItem = ({ item }: ListRenderItemInfo<IExpense>) => {
-  return <Text>{item.title}</Text>;
+  return <ExpenseItem item={item} />;
 };
 
 const ExpensesList = ({ items }: Props) => {
