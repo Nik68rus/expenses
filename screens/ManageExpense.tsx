@@ -1,19 +1,18 @@
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { useContext, useLayoutEffect } from 'react';
-import { StyleSheet, Text, View } from 'react-native';
-import Button from '../components/ui/Button';
+import { StyleSheet, Text, View, TextInput } from 'react-native';
+import ExpenseForm from '../components/ManageExpense/ExpenseForm';
 import IconButton from '../components/ui/IconButton';
 import { GlobalStyles } from '../constants/styles';
 import { ExpensesContext } from '../store/ExpensesContext';
-import { RootStackParamList } from '../types';
+import { IExpenseInput, RootStackParamList } from '../types';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'ManageExpense'>;
 
 const ManageExpense = ({ navigation, route }: Props) => {
   const itemId = route.params?.itemId;
-  const { expenses, deleteExpense, updateExpense, addExpense } =
+  const { expenses, deleteExpense, addExpense, updateExpense } =
     useContext(ExpensesContext);
-
   const currentExpense = expenses.find((exp) => exp.id === itemId);
 
   useLayoutEffect(() => {
@@ -22,38 +21,36 @@ const ManageExpense = ({ navigation, route }: Props) => {
     });
   }, [navigation, itemId]);
 
+  const confirmHandler = (data: IExpenseInput) => {
+    if (itemId) {
+      updateExpense({
+        id: itemId,
+        ...data,
+      });
+    } else {
+      addExpense(data);
+    }
+    navigation.goBack();
+  };
+
   const deleteExpenseHandler = () => {
     deleteExpense(itemId);
     navigation.goBack();
   };
 
-  const cancelHandler = () => {
-    navigation.goBack();
-  };
-
-  const confirmHandler = () => {
-    if (itemId) {
-      currentExpense.title = 'Updated title';
-      updateExpense(currentExpense);
-    } else {
-      addExpense({ title: 'test', amount: 34, date: new Date() });
-    }
+  const closeHandler = () => {
     navigation.goBack();
   };
 
   return (
     <View style={styles.container}>
-      <View style={styles.buttons}>
-        <Button onPress={cancelHandler} mode="flat" style={styles.button}>
-          Cancel
-        </Button>
-        <Button onPress={confirmHandler} style={styles.button}>
-          {itemId ? 'Update' : 'Add'}
-        </Button>
-      </View>
+      <ExpenseForm
+        item={currentExpense}
+        onClose={closeHandler}
+        onSubmit={confirmHandler}
+      />
       {itemId && (
         <>
-          <Text>{currentExpense.title}</Text>
           <View style={styles.deleteContainer}>
             <IconButton
               icon="trash"
@@ -81,14 +78,8 @@ const styles = StyleSheet.create({
     borderTopColor: GlobalStyles.colors.primary200,
     alignItems: 'center',
   },
-  buttons: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 12,
-  },
-  button: {
-    minWidth: 120,
+  baseText: {
+    color: 'white',
   },
 });
 
