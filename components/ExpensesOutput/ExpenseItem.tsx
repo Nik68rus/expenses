@@ -29,7 +29,7 @@ const ExpenseItem = ({ item }: Props) => {
         <View>
           <Text style={[styles.textBase, styles.title]}>{item.title}</Text>
           <Text style={styles.textBase}>
-            {item.date.toLocaleDateString('en-GB')}
+            {new Date(item.date).toISOString().slice(0, 10)}
           </Text>
         </View>
         <View style={styles.amountContainer}>

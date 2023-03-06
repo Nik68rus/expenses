@@ -18,7 +18,7 @@ const ExpenseForm = ({ item, onClose, onSubmit }: Props) => {
       isValid: true,
     },
     date: {
-      value: item ? item.date.toLocaleDateString('en-GB') : '',
+      value: item ? new Date(item.date).toISOString().slice(0, 10) : '',
       isValid: true,
     },
     title: { value: item ? item.title : '', isValid: true },
@@ -32,11 +32,10 @@ const ExpenseForm = ({ item, onClose, onSubmit }: Props) => {
   };
 
   const submitHandler = () => {
-    const date = formData.date.value.split('/').map((item) => +item);
     const expenseData = {
       amount: +formData.amount.value.replace(',', '.'),
       title: formData.title.value,
-      date: new Date(date[2], date[1] - 1, date[0]),
+      date: new Date(formData.date.value),
     };
 
     const amountIsValid = !isNaN(expenseData.amount) && expenseData.amount > 0;
@@ -79,7 +78,7 @@ const ExpenseForm = ({ item, onClose, onSubmit }: Props) => {
           label="Date"
           invalid={!formData.date.isValid}
           textInputConfig={{
-            placeholder: 'DD/MM/YYYY',
+            placeholder: 'YYYY-MM-DD',
             maxLength: 10,
             onChangeText: inputChangeHandler.bind(this, 'date'),
             value: formData.date.value,

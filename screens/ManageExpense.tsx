@@ -1,15 +1,25 @@
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
-import { useContext, useLayoutEffect } from 'react';
-import { StyleSheet, Text, View, TextInput } from 'react-native';
+import { useCallback, useContext, useLayoutEffect, useState } from 'react';
+import { StyleSheet, View } from 'react-native';
 import ExpenseForm from '../components/ManageExpense/ExpenseForm';
+import ErrorOverlay from '../components/ui/ErrorOverlay';
 import IconButton from '../components/ui/IconButton';
+import LoadingOverlay from '../components/ui/LoadingOverlay';
 import { GlobalStyles } from '../constants/styles';
 import { ExpensesContext } from '../store/ExpensesContext';
 import { IExpenseInput, RootStackParamList } from '../types';
+import {
+  removeServerExpense,
+  storeExpense,
+  updateServerExpense,
+} from '../util/http';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'ManageExpense'>;
 
 const ManageExpense = ({ navigation, route }: Props) => {
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState('');
+
   const itemId = route.params?.itemId;
   const { expenses, deleteExpense, addExpense, updateExpense } =
     useContext(ExpensesContext);
@@ -21,26 +31,52 @@ const ManageExpense = ({ navigation, route }: Props) => {
     });
   }, [navigation, itemId]);
 
-  const confirmHandler = (data: IExpenseInput) => {
-    if (itemId) {
-      updateExpense({
-        id: itemId,
-        ...data,
-      });
-    } else {
-      addExpense(data);
+  const errorClearHandler = useCallback(() => setError(''), []);
+
+  const confirmHandler = async (data: IExpenseInput) => {
+    setIsLoading(true);
+    try {
+      if (itemId) {
+        updateExpense({
+          id: itemId,
+          ...data,
+        });
+        await updateServerExpense(itemId, data);
+      } else {
+        const createdId = await storeExpense(data);
+        addExpense({ id: createdId, ...data });
+      }
+      navigation.goBack();
+    } catch (err) {
+      setError('Cant finish action! Try later!');
+    } finally {
+      setIsLoading(false);
     }
-    navigation.goBack();
   };
 
-  const deleteExpenseHandler = () => {
-    deleteExpense(itemId);
-    navigation.goBack();
+  const deleteExpenseHandler = async () => {
+    setIsLoading(true);
+    try {
+      await removeServerExpense(itemId);
+      deleteExpense(itemId);
+      navigation.goBack();
+    } catch (err) {
+      setError('Cant finish action! Try later!');
+      setIsLoading(false);
+    }
   };
 
   const closeHandler = () => {
     navigation.goBack();
   };
+
+  if (isLoading) {
+    return <LoadingOverlay />;
+  }
+
+  if (!isLoading && error.length) {
+    return <ErrorOverlay message={error} onConfirm={errorClearHandler} />;
+  }
 
   return (
     <View style={styles.container}>
